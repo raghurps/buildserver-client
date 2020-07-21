@@ -50,7 +50,7 @@ func NewTeamcityClient(
 // for the provided id
 func (t *TCClient) GetBuild(id int, buildDetails interface{}) (err error) {
 
-	req, err := http.NewRequest("GET", fmt.Sprintf("http://%s/app/rest/builds/id:%d", t.serverURL, id), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/app/rest/builds/id:%d", t.serverURL, id), nil)
 	req.Header.Add("Authorization", t.token)
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
@@ -118,7 +118,7 @@ func (t *TCClient) StartBuild(buildTypeID, branch string, params map[string]stri
 
 	req, err := http.NewRequest(
 		"POST",
-		fmt.Sprintf("http://%s/app/rest/buildQueue", t.serverURL),
+		fmt.Sprintf("%s/app/rest/buildQueue", t.serverURL),
 		bytes.NewBuffer(requestPayload))
 	req.Header.Add("Authorization", t.token)
 	req.Header.Add("Accept", "application/json")
@@ -168,7 +168,7 @@ func (t *TCClient) CancelQueuedBuild(id int) error {
 
 	req, err := http.NewRequest(
 		"POST",
-		fmt.Sprintf("http://%s/app/rest/buildQueue/%d", t.serverURL, id),
+		fmt.Sprintf("%s/app/rest/buildQueue/%d", t.serverURL, id),
 		bytes.NewBuffer(requestPayload))
 	req.Header.Add("Authorization", t.token)
 	req.Header.Add("Accept", "application/json")
@@ -216,7 +216,7 @@ func (t *TCClient) StopBuild(id int) error {
 
 	req, err := http.NewRequest(
 		"POST",
-		fmt.Sprintf("http://%s/app/rest/builds/%d", t.serverURL, id),
+		fmt.Sprintf("%s/app/rest/builds/%d", t.serverURL, id),
 		bytes.NewBuffer(requestPayload))
 	req.Header.Add("Authorization", t.token)
 	req.Header.Add("Accept", "application/json")
@@ -256,7 +256,7 @@ It returns content of the file as array of bytes, content type of that file and 
 */
 func (t *TCClient) GetArtifactTextFile(path string, id int) ([]byte, string, error) {
 	var fileContent []byte
-	req, err := http.NewRequest("GET", fmt.Sprintf("http://%s/app/rest/builds/id:%d/artifacts/content/%s", t.serverURL, id, path), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/app/rest/builds/id:%d/artifacts/content/%s", t.serverURL, id, path), nil)
 	req.Header.Add("Authorization", t.token)
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
