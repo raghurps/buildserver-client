@@ -53,5 +53,5 @@ Client library to communicate with different build servers
 
 ```
 # export TEAMCITY_TOKEN=<token>
-# $GOPATH/bin/teamcityctl --server http://teamcity.example.com --id <build_id> --path <path_relative_to_artifacts_directory>
+# $GOPATH/bin/teamcityctl --server http://teamcity.example.com fetch-artifact --id <build_id> --path <path_relative_to_artifacts_directory>
 ```
