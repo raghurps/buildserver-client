@@ -25,7 +25,7 @@ Client library to communicate with different build servers
 
 ```
 # export TEAMCITY_TOKEN=<token>
-# $GOPATH/bin/teamcityctl --server http://teamcity.example.com start-build --pipeline <pipeline_id> --branch <branch_name> --params KEY1=VALUE1 --params KEY2=VALUE2
+# $GOPATH/bin/teamcityctl --server http://teamcity.example.com start-build --pipeline <pipeline_id> --branch <branch_name> --param KEY1=VALUE1 --param KEY2=VALUE2 --dependency pipeline_id1:build_id1 --dependency pipeline_id2:build_id2
 ```
 
 ### Get build details by id

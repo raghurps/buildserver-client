@@ -86,7 +86,7 @@ branch is the branch name on which build will be triggered
 params is a map containing env variables and other overrides that
 user wants to provide
 */
-func (t *TCClient) StartBuild(buildTypeID, branch string, params map[string]string) (int, error) {
+func (t *TCClient) StartBuild(buildTypeID, branch string, params map[string]string, snapshotDependencies map[string]int) (int, error) {
 	var buildDetails TCBuildDetails
 
 	payload := TCBuildPayload{
@@ -99,6 +99,9 @@ func (t *TCClient) StartBuild(buildTypeID, branch string, params map[string]stri
 		Properties: TCBuildProperties{
 			Property: []TCBuildProperty{},
 		},
+		SnapshotDependencies: TCBuildSnapshotDependencies{
+			Builds: []TCBuildDetails{},
+		},
 		Personal:   "False",
 		BranchName: branch,
 	}
@@ -106,6 +109,11 @@ func (t *TCClient) StartBuild(buildTypeID, branch string, params map[string]stri
 	// Add params to properties
 	for k, v := range params {
 		payload.Properties.Property = append(payload.Properties.Property, TCBuildProperty{k, v})
+	}
+
+	// Add snapshot dependencies to request
+	for k, v := range snapshotDependencies {
+		payload.SnapshotDependencies.Builds = append(payload.SnapshotDependencies.Builds, TCBuildDetails{ID: v, BuildTypeID: k})
 	}
 
 	requestPayload, err := json.Marshal(payload)

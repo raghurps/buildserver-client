@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -15,7 +16,7 @@ import (
 func startBuild(c *cli.Context) error {
 	client := teamcity.NewTeamcityClient(5*time.Second, 5*time.Second, 5*time.Second, c.String("server"), fmt.Sprintf("Bearer %s", c.String("token")), c.Bool("secure"))
 	paramsMap := map[string]string{}
-	for _, v := range c.StringSlice("params") {
+	for _, v := range c.StringSlice("param") {
 		param := strings.Split(v, "=")
 		if len(param) != 2 {
 			err := errors.New("Params not provided in the form of KEY=VALUE")
@@ -25,7 +26,18 @@ func startBuild(c *cli.Context) error {
 		paramsMap[param[0]] = param[1]
 	}
 
-	id, err := client.StartBuild(c.String("pipeline"), c.String("branch"), paramsMap)
+	dependencyMap := map[string]int{}
+	for _, v := range c.StringSlice("dependency") {
+		dependency := strings.Split(v, "=")
+		if len(dependency) != 2 {
+			err := errors.New("Dependency not provided in the form of buildPipelineID=buildID")
+			log.Println(err.Error())
+			return err
+		}
+		dependencyMap[dependency[0]], _ = strconv.Atoi(dependency[1])
+	}
+
+	id, err := client.StartBuild(c.String("pipeline"), c.String("branch"), paramsMap, dependencyMap)
 	if err != nil {
 		log.Println(err.Error())
 		return err
@@ -125,8 +137,12 @@ func main() {
 						Required: true,
 					},
 					&cli.StringSliceFlag{
-						Name:  "params",
+						Name:  "param",
 						Usage: "Provide multiple params as key:value separated by space",
+					},
+					&cli.StringSliceFlag{
+						Name:  "dependency",
+						Usage: "Provide multiple build snapshot dependencies as buildPipelineID:buildID",
 					},
 				},
 				Action: startBuild,
