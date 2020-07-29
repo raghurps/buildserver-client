@@ -25,7 +25,9 @@ Client library to communicate with different build servers
 
 ```
 # export TEAMCITY_TOKEN=<token>
-# $GOPATH/bin/teamcityctl --server http://teamcity.example.com start-build --pipeline <pipeline_id> --branch <branch_name> --param KEY1=VALUE1 --param KEY2=VALUE2 --dependency pipeline_id1:build_id1 --dependency pipeline_id2:build_id2
+# $GOPATH/bin/teamcityctl --server http://teamcity.example.com start-build --pipeline <pipeline_id> --branch <branch_name> \
+   --param KEY1=VALUE1 --param KEY2=VALUE2 --dependency pipeline_id1:build_id1 --dependency pipeline_id2:build_id2 \
+   --comment "<your text comment>"
 ```
 
 ### Get build details by id
@@ -39,14 +41,14 @@ Client library to communicate with different build servers
 
 ```
 # export TEAMCITY_TOKEN=<token>
-# $GOPATH/bin/teamcityctl --server http://teamcity.example.com stop-build --id <build_id>
+# $GOPATH/bin/teamcityctl --server http://teamcity.example.com stop-build --id <build_id> --comment "<your text comment>
 ```
 
 ### Cancel queued build
 
 ```
 # export TEAMCITY_TOKEN=<token>
-# $GOPATH/bin/teamcityctl --server http://teamcity.example.com cancel-build --id <build_id>
+# $GOPATH/bin/teamcityctl --server http://teamcity.example.com cancel-build --id <build_id> --comment "<your text comment>
 ```
 
 ### Get content from a text file in artifact for a given build id

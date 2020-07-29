@@ -37,7 +37,7 @@ func startBuild(c *cli.Context) error {
 		dependencyMap[dependency[0]], _ = strconv.Atoi(dependency[1])
 	}
 
-	id, err := client.StartBuild(c.String("pipeline"), c.String("branch"), paramsMap, dependencyMap)
+	id, err := client.StartBuild(c.String("pipeline"), c.String("branch"), c.String("comment"), paramsMap, dependencyMap)
 	if err != nil {
 		log.Println(err.Error())
 		return err
@@ -49,7 +49,7 @@ func startBuild(c *cli.Context) error {
 func cancelBuild(c *cli.Context) error {
 	client := teamcity.NewTeamcityClient(5*time.Second, 5*time.Second, 5*time.Second, c.String("server"), fmt.Sprintf("Bearer %s", c.String("token")), c.Bool("secure"))
 	id := c.Int("id")
-	err := client.CancelQueuedBuild(id)
+	err := client.CancelQueuedBuild(id, c.String("comment"))
 	if err != nil {
 		log.Println(err.Error())
 		return err
@@ -62,7 +62,7 @@ func cancelBuild(c *cli.Context) error {
 func stopBuild(c *cli.Context) error {
 	client := teamcity.NewTeamcityClient(5*time.Second, 5*time.Second, 5*time.Second, c.String("server"), fmt.Sprintf("Bearer %s", c.String("token")), c.Bool("secure"))
 	id := c.Int("id")
-	err := client.StopBuild(id)
+	err := client.StopBuild(id, c.String("comment"))
 	if err != nil {
 		log.Println(err.Error())
 		return err
@@ -138,11 +138,16 @@ func main() {
 					},
 					&cli.StringSliceFlag{
 						Name:  "param",
-						Usage: "Provide multiple params as key:value separated by space",
+						Usage: "Provide multiple params as key:value, e.g. --param key1=value1 --param key2=value2",
 					},
 					&cli.StringSliceFlag{
 						Name:  "dependency",
-						Usage: "Provide multiple build snapshot dependencies as buildPipelineID:buildID",
+						Usage: "Provide multiple build snapshot dependencies as buildPipelineID:buildID, e.g --dependency myBuildConfigID1:uniqeBuildID1 --dependency  myBuildConfigID2:uniqeBuildID2",
+					},
+					&cli.StringFlag{
+						Name:  "comment",
+						Usage: "Provide text comment",
+						Value: "Build started by teamcityctl CLI",
 					},
 				},
 				Action: startBuild,
@@ -168,6 +173,11 @@ func main() {
 						Usage:    "Provide unique build ID that needs to be cancelled",
 						Required: true,
 					},
+					&cli.StringFlag{
+						Name:  "comment",
+						Usage: "Provide text comment",
+						Value: "Build started by teamcityctl CLI",
+					},
 				},
 				Action: cancelBuild,
 			},
@@ -179,6 +189,11 @@ func main() {
 						Name:     "id",
 						Usage:    "Provide unique build ID that needs to be stopped",
 						Required: true,
+					},
+					&cli.StringFlag{
+						Name:  "comment",
+						Usage: "Provide text comment",
+						Value: "Build started by teamcityctl CLI",
 					},
 				},
 				Action: stopBuild,

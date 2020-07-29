@@ -86,7 +86,7 @@ branch is the branch name on which build will be triggered
 params is a map containing env variables and other overrides that
 user wants to provide
 */
-func (t *TCClient) StartBuild(buildTypeID, branch string, params map[string]string, snapshotDependencies map[string]int) (int, error) {
+func (t *TCClient) StartBuild(buildTypeID, branch, comment string, params map[string]string, snapshotDependencies map[string]int) (int, error) {
 	var buildDetails TCBuildDetails
 
 	payload := TCBuildPayload{
@@ -94,7 +94,7 @@ func (t *TCClient) StartBuild(buildTypeID, branch string, params map[string]stri
 			ID: buildTypeID,
 		},
 		Comment: TCBuildComment{
-			Text: "Build started by Prow",
+			Text: comment,
 		},
 		Properties: TCBuildProperties{
 			Property: []TCBuildProperty{},
@@ -158,11 +158,11 @@ func (t *TCClient) StartBuild(buildTypeID, branch string, params map[string]stri
 // queued in the BuildQueue
 // If the build has already started or finished,
 // this call will fail
-func (t *TCClient) CancelQueuedBuild(id int) error {
+func (t *TCClient) CancelQueuedBuild(id int, comment string) error {
 	//var buildDetails TCBuildDetails
 
 	payload := TCBuildStopPayload{
-		Comment:        "Build cancelled by prow",
+		Comment:        comment,
 		ReaddIntoQueue: "false",
 	}
 
@@ -206,11 +206,11 @@ func (t *TCClient) CancelQueuedBuild(id int) error {
 }
 
 // StopBuild stops a running build
-func (t *TCClient) StopBuild(id int) error {
+func (t *TCClient) StopBuild(id int, comment string) error {
 	//var buildDetails TCBuildDetails
 
 	payload := TCBuildStopPayload{
-		Comment:        "Build stopped by prow",
+		Comment:        comment,
 		ReaddIntoQueue: "false",
 	}
 
@@ -242,13 +242,6 @@ func (t *TCClient) StopBuild(id int) error {
 		return err
 	}
 
-	/* err = json.Unmarshal(body, &buildDetails)
-	if err != nil {
-		log.Println(err.Error())
-		return err
-	}
-
-	log.Println(buildDetails) */
 	log.Println(string(body))
 	return nil
 }
