@@ -58,6 +58,8 @@ Client library to communicate with different build servers
 # $GOPATH/bin/teamcityctl --server http://teamcity.example.com fetch-artifact --id <build_id> --path <path_relative_to_artifacts_directory>
 ```
 ## Make API calls to teamcity build server from your code
+GoDoc [link](https://pkg.go.dev/github.com/raghuP9/buildserver-client@v0.0.2/pkg/buildserver/teamcity)
+
 ### Create client
 ```
 package main
