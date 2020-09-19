@@ -41,6 +41,7 @@ type TCBuildPayload struct {
 	Personal             string                      `json:"personal"` // "true" or "false"
 	BranchName           string                      `json:"branchName,omitempty"`
 	SnapshotDependencies TCBuildSnapshotDependencies `json:"snapshot-dependencies,omitempty"`
+	ArtifactDependencies TCBuildSnapshotDependencies `json:"artifact-dependencies,omitempty"`
 }
 
 // TCBuildDetails ...
@@ -57,6 +58,7 @@ type TCBuildDetails struct {
 	BuildType            TCBuildType                 `json:"buildType,omitempty"`
 	Properties           TCBuildProperties           `json:"properties,omitempty"`
 	SnapshotDependencies TCBuildSnapshotDependencies `json:"snapshot-dependencies,omitempty"`
+	ArtifactDependencies TCBuildSnapshotDependencies `json:"artifact-dependencies,omitempty"`
 }
 
 // TCBuildStopPayload ...

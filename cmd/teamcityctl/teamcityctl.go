@@ -14,7 +14,13 @@ import (
 )
 
 func startBuild(c *cli.Context) error {
-	client := teamcity.NewTeamcityClient(5*time.Second, 5*time.Second, 5*time.Second, c.String("server"), fmt.Sprintf("Bearer %s", c.String("token")), c.Bool("secure"))
+	client := teamcity.NewTeamcityClient(
+		5*time.Second,
+		5*time.Second,
+		5*time.Second,
+		c.String("server"),
+		fmt.Sprintf("Bearer %s", c.String("token")), c.Bool("secure"),
+	)
 	paramsMap := map[string]string{}
 	for _, v := range c.StringSlice("param") {
 		param := strings.Split(v, "=")
@@ -26,18 +32,36 @@ func startBuild(c *cli.Context) error {
 		paramsMap[param[0]] = param[1]
 	}
 
-	dependencyMap := map[string]int{}
-	for _, v := range c.StringSlice("dependency") {
+	snapDependencyMap := map[string]int{}
+	for _, v := range c.StringSlice("snapshot-dependency") {
 		dependency := strings.Split(v, "=")
 		if len(dependency) != 2 {
-			err := errors.New("Dependency not provided in the form of buildPipelineID=buildID")
+			err := errors.New("Snapshot dependency not provided in the form of buildPipelineID=buildID")
 			log.Println(err.Error())
 			return err
 		}
-		dependencyMap[dependency[0]], _ = strconv.Atoi(dependency[1])
+		snapDependencyMap[dependency[0]], _ = strconv.Atoi(dependency[1])
 	}
 
-	id, err := client.StartBuild(c.String("pipeline"), c.String("branch"), c.String("comment"), paramsMap, dependencyMap)
+	artfDependencyMap := map[string]int{}
+	for _, v := range c.StringSlice("artifact-dependency") {
+		dependency := strings.Split(v, "=")
+		if len(dependency) != 2 {
+			err := errors.New("Artifact dependency not provided in the form of buildPipelineID=buildID")
+			log.Println(err.Error())
+			return err
+		}
+		artfDependencyMap[dependency[0]], _ = strconv.Atoi(dependency[1])
+	}
+
+	id, err := client.StartBuild(
+		c.String("pipeline"),
+		c.String("branch"),
+		c.String("comment"),
+		paramsMap,
+		snapDependencyMap,
+		artfDependencyMap,
+	)
 	if err != nil {
 		log.Println(err.Error())
 		return err
@@ -47,7 +71,13 @@ func startBuild(c *cli.Context) error {
 }
 
 func cancelBuild(c *cli.Context) error {
-	client := teamcity.NewTeamcityClient(5*time.Second, 5*time.Second, 5*time.Second, c.String("server"), fmt.Sprintf("Bearer %s", c.String("token")), c.Bool("secure"))
+	client := teamcity.NewTeamcityClient(
+		5*time.Second,
+		5*time.Second,
+		5*time.Second,
+		c.String("server"),
+		fmt.Sprintf("Bearer %s", c.String("token")), c.Bool("secure"),
+	)
 	id := c.Int("id")
 	err := client.CancelQueuedBuild(id, c.String("comment"))
 	if err != nil {
@@ -60,7 +90,13 @@ func cancelBuild(c *cli.Context) error {
 }
 
 func stopBuild(c *cli.Context) error {
-	client := teamcity.NewTeamcityClient(5*time.Second, 5*time.Second, 5*time.Second, c.String("server"), fmt.Sprintf("Bearer %s", c.String("token")), c.Bool("secure"))
+	client := teamcity.NewTeamcityClient(
+		5*time.Second,
+		5*time.Second,
+		5*time.Second,
+		c.String("server"),
+		fmt.Sprintf("Bearer %s", c.String("token")), c.Bool("secure"),
+	)
 	id := c.Int("id")
 	err := client.StopBuild(id, c.String("comment"))
 	if err != nil {
@@ -73,7 +109,13 @@ func stopBuild(c *cli.Context) error {
 }
 
 func statusBuild(c *cli.Context) error {
-	client := teamcity.NewTeamcityClient(5*time.Second, 5*time.Second, 5*time.Second, c.String("server"), fmt.Sprintf("Bearer %s", c.String("token")), c.Bool("secure"))
+	client := teamcity.NewTeamcityClient(
+		5*time.Second,
+		5*time.Second,
+		5*time.Second,
+		c.String("server"),
+		fmt.Sprintf("Bearer %s", c.String("token")), c.Bool("secure"),
+	)
 	id := c.Int("id")
 	details := &teamcity.TCBuildDetails{}
 	err := client.GetBuild(id, details)
@@ -88,7 +130,13 @@ func statusBuild(c *cli.Context) error {
 }
 
 func fetchArtifact(c *cli.Context) error {
-	client := teamcity.NewTeamcityClient(5*time.Second, 5*time.Second, 5*time.Second, c.String("server"), fmt.Sprintf("Bearer %s", c.String("token")), c.Bool("secure"))
+	client := teamcity.NewTeamcityClient(
+		5*time.Second,
+		5*time.Second,
+		5*time.Second,
+		c.String("server"),
+		fmt.Sprintf("Bearer %s", c.String("token")), c.Bool("secure"),
+	)
 	id := c.Int("id")
 	content, contentType, err := client.GetArtifactTextFile(c.String("path"), c.Int("id"))
 	if err != nil {
@@ -141,8 +189,14 @@ func main() {
 						Usage: "Provide multiple params as key:value, e.g. --param key1=value1 --param key2=value2",
 					},
 					&cli.StringSliceFlag{
-						Name:  "dependency",
-						Usage: "Provide multiple build snapshot dependencies as buildPipelineID:buildID, e.g --dependency myBuildConfigID1:uniqeBuildID1 --dependency  myBuildConfigID2:uniqeBuildID2",
+						Name: "snapshot-dependency",
+						Usage: "Provide multiple build snapshot dependencies as buildPipelineID:buildID," +
+							" e.g --snapshot-dependency myBuildConfigID1:uniqeBuildID1 --snapshot-dependency  myBuildConfigID2:uniqeBuildID2",
+					},
+					&cli.StringSliceFlag{
+						Name: "artifact-dependency",
+						Usage: "Provide multiple build artifact dependencies as buildPipelineID:buildID," +
+							" e.g --artifact-dependency myBuildConfigID1:uniqeBuildID1 --artifact-dependency  myBuildConfigID2:uniqeBuildID2",
 					},
 					&cli.StringFlag{
 						Name:  "comment",
