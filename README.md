@@ -43,14 +43,14 @@ $GOPATH/bin/teamcityctl --server http://teamcity.example.com get-build --id <bui
 
 ```bash
 export TEAMCITY_TOKEN=<token>
-$GOPATH/bin/teamcityctl --server http://teamcity.example.com stop-build --id <build_id> --comment "<your text comment>
+$GOPATH/bin/teamcityctl --server http://teamcity.example.com stop-build --id <build_id> --comment "<your text comment>"
 ```
 
 ### Cancel queued build
 
 ```bash
 export TEAMCITY_TOKEN=<token>
-$GOPATH/bin/teamcityctl --server http://teamcity.example.com cancel-build --id <build_id> --comment "<your text comment>
+$GOPATH/bin/teamcityctl --server http://teamcity.example.com cancel-build --id <build_id> --comment "<your text comment>"
 ```
 
 ### Get content from a text file in artifact for a given build id
@@ -59,11 +59,14 @@ $GOPATH/bin/teamcityctl --server http://teamcity.example.com cancel-build --id <
 # export TEAMCITY_TOKEN=<token>
 # $GOPATH/bin/teamcityctl --server http://teamcity.example.com fetch-artifact --id <build_id> --path <path_relative_to_artifacts_directory>
 ```
+
 ## Make API calls to teamcity build server from your code
+
 GoDoc [link](https://pkg.go.dev/github.com/raghuP9/buildserver-client@v0.0.2/pkg/buildserver/teamcity)
 
 ### Create client
-```
+
+```go
 package main
 
 import (
@@ -84,7 +87,8 @@ func main() {
 ```
 
 ### Trigger builds using client
-```
+
+```go
 id, err := client.StartBuild(
   "<teamcityBuildTypeID>",                // Provide build configuration ID to trigger that build on
   "<branch-name>",                        // Provide branch name on which you want to trigger build
@@ -93,26 +97,38 @@ id, err := client.StartBuild(
     "env.MY_VAR1": "MY_VALUE1",           // add/override when triggering build
     "env.MY_VAR2": "MY_VALUE2",
   },
-  map[string]int{                         // Provide build IDs of other builds which are specified as 
+  map[string]int{                         // Provide build IDs of other builds which are specified as
     "<teamcityBuildTypeID1>": 123456,     // snapshot dependencies and whose already built artifacts you
     "<teamcityBuildTypeID2>": 123457,     // want to use in this build.
   },
+   map[string]int{                         // Provide build IDs of other builds which are specified as
+    "<teamcityBuildTypeID3>": 123456,     // artifact dependencies and whose already built artifacts you
+    "<teamcityBuildTypeID4>": 123457,     // want to use in this build.
+  },
 )
 ```
+
 ### Get build status by ID(int)
-```
+
+```go
 statusDetails := teamcity.TCBuildDetails{}
 err := client.GetBuild(id, &statusDetails)
 ```
+
 ### Cancel a queued build by ID (int)
-```
+
+```go
 err := client.CancelQueuedBuild(id, "your-comment-for-cancelling-build")
 ```
+
 ### Stop a running build by ID (int)
-```
+
+```go
 err := client.StopBuild(id, "your-comment-for-stopping-build")
 ```
+
 ### Get artifact text file (currently only supported for smaller text files)
-```
+
+```go
 byteArray, contentType, err := client.GetArtifactTextFile("path/to/artifact", id)
 ```
