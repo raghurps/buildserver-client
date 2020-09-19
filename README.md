@@ -8,52 +8,54 @@ Client library to communicate with different build servers
 
 ## Download library
 
-```
-# go get -u github.com/raghuP9/buildserver-client
+```bash
+go get -u github.com/raghuP9/buildserver-client
 ```
 
 ## Trigger builds from command line using CLI
 
 ### Generate teamcityctl binary
 
-```
-# go get -u github.com/raghuP9/buildserver-client/cmd/teamcityctl
-# $GOPATH/bin/teamcityctl --help
+```bash
+go get -u github.com/raghuP9/buildserver-client/cmd/teamcityctl
+$GOPATH/bin/teamcityctl --help
 ```
 
 ### Add build to queue
 
-```
-# export TEAMCITY_TOKEN=<token>
-# $GOPATH/bin/teamcityctl --server http://teamcity.example.com start-build --pipeline <pipeline_id> --branch <branch_name> \
-   --param KEY1=VALUE1 --param KEY2=VALUE2 --dependency pipeline_id1:build_id1 --dependency pipeline_id2:build_id2 \
+```bash
+export TEAMCITY_TOKEN=<token>
+$GOPATH/bin/teamcityctl --server http://teamcity.example.com start-build --pipeline <pipeline_id> --branch <branch_name> \
+   --param KEY1=VALUE1 --param KEY2=VALUE2 \
+   --snapshot-dependency pipeline_id1:build_id1 --snapshot-dependency pipeline_id2:build_id2 \
+   --artifact-dependency pipeline_id3:build_id3 --artifact-dependency pipeline_id4:build_id4 \
    --comment "<your text comment>"
 ```
 
 ### Get build details by id
 
-```
-# export TEAMCITY_TOKEN=<token>
-# $GOPATH/bin/teamcityctl --server http://teamcity.example.com get-build --id <build_id>
+```bash
+export TEAMCITY_TOKEN=<token>
+$GOPATH/bin/teamcityctl --server http://teamcity.example.com get-build --id <build_id>
 ```
 
 ### Stop running build by id
 
-```
-# export TEAMCITY_TOKEN=<token>
-# $GOPATH/bin/teamcityctl --server http://teamcity.example.com stop-build --id <build_id> --comment "<your text comment>
+```bash
+export TEAMCITY_TOKEN=<token>
+$GOPATH/bin/teamcityctl --server http://teamcity.example.com stop-build --id <build_id> --comment "<your text comment>
 ```
 
 ### Cancel queued build
 
-```
-# export TEAMCITY_TOKEN=<token>
-# $GOPATH/bin/teamcityctl --server http://teamcity.example.com cancel-build --id <build_id> --comment "<your text comment>
+```bash
+export TEAMCITY_TOKEN=<token>
+$GOPATH/bin/teamcityctl --server http://teamcity.example.com cancel-build --id <build_id> --comment "<your text comment>
 ```
 
 ### Get content from a text file in artifact for a given build id
 
-```
+```bash
 # export TEAMCITY_TOKEN=<token>
 # $GOPATH/bin/teamcityctl --server http://teamcity.example.com fetch-artifact --id <build_id> --path <path_relative_to_artifacts_directory>
 ```
