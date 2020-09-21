@@ -103,12 +103,6 @@ func (t *TCClient) StartBuild(
 		Properties: TCBuildProperties{
 			Property: []TCBuildProperty{},
 		},
-		SnapshotDependencies: TCBuildSnapshotDependencies{
-			Builds: []TCBuildDetails{},
-		},
-		ArtifactDependencies: TCBuildSnapshotDependencies{
-			Builds: []TCBuildDetails{},
-		},
 		Personal:   "False",
 		BranchName: branch,
 	}
@@ -118,14 +112,29 @@ func (t *TCClient) StartBuild(
 		payload.Properties.Property = append(payload.Properties.Property, TCBuildProperty{k, v})
 	}
 
+	snapDeps := TCBuildSnapshotDependencies{
+		Builds: []TCBuildDetails{},
+	}
+	artfDeps := TCBuildSnapshotDependencies{
+		Builds: []TCBuildDetails{},
+	}
+
 	// Add snapshot dependencies to request
 	for k, v := range snapshotDependencies {
-		payload.SnapshotDependencies.Builds = append(payload.SnapshotDependencies.Builds, TCBuildDetails{ID: v, BuildTypeID: k})
+		snapDeps.Builds = append(snapDeps.Builds, TCBuildDetails{ID: v, BuildTypeID: k})
 	}
 
 	// Add artifact dependencies to request
 	for k, v := range artifactDependencies {
-		payload.ArtifactDependencies.Builds = append(payload.ArtifactDependencies.Builds, TCBuildDetails{ID: v, BuildTypeID: k})
+		artfDeps.Builds = append(artfDeps.Builds, TCBuildDetails{ID: v, BuildTypeID: k})
+	}
+
+	if len(snapDeps.Builds) > 0 {
+		payload.SnapshotDependencies = &snapDeps
+	}
+
+	if len(artfDeps.Builds) > 0 {
+		payload.ArtifactDependencies = &artfDeps
 	}
 
 	requestPayload, err := json.Marshal(payload)
@@ -156,6 +165,7 @@ func (t *TCClient) StartBuild(
 		return -1, err
 	}
 
+	log.Printf(string(body))
 	err = json.Unmarshal(body, &buildDetails)
 	if err != nil {
 		log.Println(err.Error())

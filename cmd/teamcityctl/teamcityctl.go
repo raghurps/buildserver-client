@@ -151,6 +151,8 @@ func fetchArtifact(c *cli.Context) error {
 }
 
 func main() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	app := &cli.App{
 		Name:    "teamcityctl",
 		Version: "1.0.0",

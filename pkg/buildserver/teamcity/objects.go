@@ -35,30 +35,30 @@ type TCBuildSnapshotDependencies struct {
 
 // TCBuildPayload ...
 type TCBuildPayload struct {
-	BuildType            TCBuildType                 `json:"buildType"`
-	Comment              TCBuildComment              `json:"comment,omitempty"`
-	Properties           TCBuildProperties           `json:"properties,omitempty"`
-	Personal             string                      `json:"personal"` // "true" or "false"
-	BranchName           string                      `json:"branchName,omitempty"`
-	SnapshotDependencies TCBuildSnapshotDependencies `json:"snapshot-dependencies,omitempty"`
-	ArtifactDependencies TCBuildSnapshotDependencies `json:"artifact-dependencies,omitempty"`
+	BuildType            TCBuildType                  `json:"buildType"`
+	Comment              TCBuildComment               `json:"comment,omitempty"`
+	Properties           TCBuildProperties            `json:"properties,omitempty"`
+	Personal             string                       `json:"personal"` // "true" or "false"
+	BranchName           string                       `json:"branchName,omitempty"`
+	SnapshotDependencies *TCBuildSnapshotDependencies `json:"snapshot-dependencies,omitempty"`
+	ArtifactDependencies *TCBuildSnapshotDependencies `json:"artifact-dependencies,omitempty"`
 }
 
 // TCBuildDetails ...
 type TCBuildDetails struct {
-	ID                   int                         `json:"id"`
-	BuildTypeID          string                      `json:"buildTypeId,omitempty"`
-	Number               string                      `json:"number,omitempty"`
-	Status               string                      `json:"status,omitempty"`
-	State                string                      `json:"state,omitempty"`
-	BranchName           string                      `json:"branchName,omitempty"`
-	WebURL               string                      `json:"webUrl,omitempty"`
-	StatusText           string                      `json:"statusText,omitempty"`
-	Comment              TCBuildComment              `json:"comment,omitempty"`
-	BuildType            TCBuildType                 `json:"buildType,omitempty"`
-	Properties           TCBuildProperties           `json:"properties,omitempty"`
-	SnapshotDependencies TCBuildSnapshotDependencies `json:"snapshot-dependencies,omitempty"`
-	ArtifactDependencies TCBuildSnapshotDependencies `json:"artifact-dependencies,omitempty"`
+	ID                   int                          `json:"id"`
+	BuildTypeID          string                       `json:"buildTypeId,omitempty"`
+	Number               string                       `json:"number,omitempty"`
+	Status               string                       `json:"status,omitempty"`
+	State                string                       `json:"state,omitempty"`
+	BranchName           string                       `json:"branchName,omitempty"`
+	WebURL               string                       `json:"webUrl,omitempty"`
+	StatusText           string                       `json:"statusText,omitempty"`
+	Comment              TCBuildComment               `json:"comment,omitempty"`
+	BuildType            TCBuildType                  `json:"buildType,omitempty"`
+	Properties           TCBuildProperties            `json:"properties,omitempty"`
+	SnapshotDependencies *TCBuildSnapshotDependencies `json:"snapshot-dependencies,omitempty"`
+	ArtifactDependencies *TCBuildSnapshotDependencies `json:"artifact-dependencies,omitempty"`
 }
 
 // TCBuildStopPayload ...
