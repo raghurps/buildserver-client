@@ -62,7 +62,7 @@ $GOPATH/bin/teamcityctl --server http://teamcity.example.com cancel-build --id <
 
 ## Make API calls to teamcity build server from your code
 
-GoDoc [link](https://pkg.go.dev/github.com/raghuP9/buildserver-client@v0.0.2/pkg/buildserver/teamcity)
+GoDoc [link](https://pkg.go.dev/github.com/raghuP9/buildserver-client@v0.0.4/pkg/buildserver/teamcity)
 
 ### Create client
 
