@@ -19,7 +19,8 @@ func startBuild(c *cli.Context) error {
 		5*time.Second,
 		5*time.Second,
 		c.String("server"),
-		fmt.Sprintf("Bearer %s", c.String("token")), c.Bool("secure"),
+		c.String("token"),
+		c.Bool("secure"),
 	)
 	paramsMap := map[string]string{}
 	for _, v := range c.StringSlice("param") {
