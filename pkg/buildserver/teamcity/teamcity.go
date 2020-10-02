@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -42,7 +43,10 @@ func NewTeamcityClient(
 	return &TCClient{
 		client:    client,
 		serverURL: serverURL,
-		token:     token,
+		// Trim the bearer from the token, to keep the API backward compatible
+		// with previous versions were the client had to add the Bearer to the
+		// token beforehand.
+		token: strings.TrimPrefix("Bearer ", token),
 	}
 }
 
@@ -51,9 +55,13 @@ func NewTeamcityClient(
 func (t *TCClient) GetBuild(id int, buildDetails interface{}) (err error) {
 
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/app/rest/builds/id:%d", t.serverURL, id), nil)
-	req.Header.Add("Authorization", t.token)
+	if err != nil {
+		return err
+	}
+	t.setAuthorizationHeader(req.Header)
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
+
 	resp, err := t.client.Do(req)
 	if err != nil {
 		log.Println(err.Error())
@@ -149,9 +157,13 @@ func (t *TCClient) StartBuild(
 		"POST",
 		fmt.Sprintf("%s/app/rest/buildQueue", t.serverURL),
 		bytes.NewBuffer(requestPayload))
-	req.Header.Add("Authorization", t.token)
+	if err != nil {
+		return -1, err
+	}
+	t.setAuthorizationHeader(req.Header)
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
+
 	resp, err := t.client.Do(req)
 	if err != nil {
 		log.Println(err.Error())
@@ -181,7 +193,7 @@ func (t *TCClient) StartBuild(
 // If the build has already started or finished,
 // this call will fail
 func (t *TCClient) CancelQueuedBuild(id int, comment string) error {
-	//var buildDetails TCBuildDetails
+	// var buildDetails TCBuildDetails
 
 	payload := TCBuildStopPayload{
 		Comment:        comment,
@@ -200,9 +212,13 @@ func (t *TCClient) CancelQueuedBuild(id int, comment string) error {
 		"POST",
 		fmt.Sprintf("%s/app/rest/buildQueue/%d", t.serverURL, id),
 		bytes.NewBuffer(requestPayload))
-	req.Header.Add("Authorization", t.token)
+	if err != nil {
+		return err
+	}
+	t.setAuthorizationHeader(req.Header)
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
+
 	resp, err := t.client.Do(req)
 	if err != nil {
 		log.Println(err.Error())
@@ -229,7 +245,7 @@ func (t *TCClient) CancelQueuedBuild(id int, comment string) error {
 
 // StopBuild stops a running build
 func (t *TCClient) StopBuild(id int, comment string) error {
-	//var buildDetails TCBuildDetails
+	// var buildDetails TCBuildDetails
 
 	payload := TCBuildStopPayload{
 		Comment:        comment,
@@ -248,7 +264,10 @@ func (t *TCClient) StopBuild(id int, comment string) error {
 		"POST",
 		fmt.Sprintf("%s/app/rest/builds/%d", t.serverURL, id),
 		bytes.NewBuffer(requestPayload))
-	req.Header.Add("Authorization", t.token)
+	if err != nil {
+		return err
+	}
+	t.setAuthorizationHeader(req.Header)
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
 	resp, err := t.client.Do(req)
@@ -280,9 +299,13 @@ It returns content of the file as array of bytes, content type of that file and 
 func (t *TCClient) GetArtifactTextFile(path string, id int) ([]byte, string, error) {
 	var fileContent []byte
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/app/rest/builds/id:%d/artifacts/content/%s", t.serverURL, id, path), nil)
-	req.Header.Add("Authorization", t.token)
+	if err != nil {
+		return nil, "", err
+	}
+	t.setAuthorizationHeader(req.Header)
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
+
 	resp, err := t.client.Do(req)
 	if err != nil {
 		log.Println(err.Error())
@@ -296,4 +319,8 @@ func (t *TCClient) GetArtifactTextFile(path string, id int) ([]byte, string, err
 		return fileContent, "", err
 	}
 	return fileContent, resp.Header.Get("Content-Type"), nil
+}
+
+func (t *TCClient) setAuthorizationHeader(headers http.Header) {
+	headers.Add("Authorization", fmt.Sprintf("Bearer %s", t.token))
 }
