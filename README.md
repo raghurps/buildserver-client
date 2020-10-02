@@ -36,7 +36,16 @@ $GOPATH/bin/teamcityctl --server http://teamcity.example.com start-build --pipel
 
 ```bash
 export TEAMCITY_TOKEN=<token>
-$GOPATH/bin/teamcityctl --server http://teamcity.example.com get-build --id <build_id>
+$GOPATH/bin/teamcityctl --server http://teamcity.example.com get-build --id <build_id> --format table # default json
+```
+
+### Get all builds as per query params
+
+To get all builds triggered by user `USER1` on pipeline `PIPELINE1` that is successful in table format
+
+```bash
+export TEAMCITY_TOKEN=<token>
+$GOPATH/bin/teamcityctl --server http://teamcity.example.com get-builds --pipeline PIPELINE1 --user USER1 --status SUCCESS --format table
 ```
 
 ### Stop running build by id
@@ -113,6 +122,26 @@ id, err := client.StartBuild(
 ```go
 statusDetails := teamcity.TCBuildDetails{}
 err := client.GetBuild(id, &statusDetails)
+```
+
+### Get all builds according to query params
+
+For finding all the running builds under build configuration(pipeline) `PIPELINE1`
+on branch `MYDEVBRANCH`
+
+```go
+params := teamcity.TCQueryParams{
+  BuildTypeID: "PIPELINE1",
+  Branch:      "MYDEVBRANCH",
+  Status:      "",
+  User:        "",
+  Running:     true,
+  Cancelled:   false,
+  Start:       1,
+  Count:       50,
+  LookupLimit: 5000,
+}
+err := client.GetAllBuilds(params)
 ```
 
 ### Cancel a queued build by ID (int)

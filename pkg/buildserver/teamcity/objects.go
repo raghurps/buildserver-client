@@ -66,3 +66,16 @@ type TCBuildStopPayload struct {
 	Comment        string `json:"comment"`
 	ReaddIntoQueue string `json:"readdIntoQueue"` // "true" or "false"
 }
+
+// TCQueryParams ...
+type TCQueryParams struct {
+	BuildTypeID string // Pipeline name (BuildConfig ID)
+	Branch      string // Branch name
+	Status      string // Status such as SUCCESS FAILURE UNKNOWN
+	User        string // Teamcity username
+	Running     bool   // Build running
+	Cancelled   bool   // Build cancelled
+	Start       uint   // Start index when listing builds
+	Count       uint   // Number of build records to return from start index
+	LookupLimit uint   // Lookup limit that limits teamcity to process the latest N builds only
+}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -9,9 +10,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jedib0t/go-pretty/table"
 	"github.com/raghuP9/buildserver-client/pkg/buildserver/teamcity"
 	"github.com/urfave/cli/v2"
 )
+
+var t = table.NewWriter()
 
 func startBuild(c *cli.Context) error {
 	client := teamcity.NewTeamcityClient(
@@ -68,6 +72,10 @@ func startBuild(c *cli.Context) error {
 		return err
 	}
 	log.Printf("Started build with ID: %d\n", id)
+	t.SetOutputMirror(os.Stdout)
+	t.AppendHeader(table.Row{"#", "Build ID"})
+	t.AppendRow([]interface{}{1, id})
+	t.Render()
 	return nil
 }
 
@@ -77,7 +85,8 @@ func cancelBuild(c *cli.Context) error {
 		5*time.Second,
 		5*time.Second,
 		c.String("server"),
-		fmt.Sprintf("Bearer %s", c.String("token")), c.Bool("secure"),
+		fmt.Sprintf("Bearer %s", c.String("token")),
+		c.Bool("secure"),
 	)
 	id := c.Int("id")
 	err := client.CancelQueuedBuild(id, c.String("comment"))
@@ -96,7 +105,8 @@ func stopBuild(c *cli.Context) error {
 		5*time.Second,
 		5*time.Second,
 		c.String("server"),
-		fmt.Sprintf("Bearer %s", c.String("token")), c.Bool("secure"),
+		fmt.Sprintf("Bearer %s", c.String("token")),
+		c.Bool("secure"),
 	)
 	id := c.Int("id")
 	err := client.StopBuild(id, c.String("comment"))
@@ -115,7 +125,8 @@ func statusBuild(c *cli.Context) error {
 		5*time.Second,
 		5*time.Second,
 		c.String("server"),
-		fmt.Sprintf("Bearer %s", c.String("token")), c.Bool("secure"),
+		fmt.Sprintf("Bearer %s", c.String("token")),
+		c.Bool("secure"),
 	)
 	id := c.Int("id")
 	details := &teamcity.TCBuildDetails{}
@@ -125,8 +136,99 @@ func statusBuild(c *cli.Context) error {
 		return err
 	}
 
-	log.Printf("Successfully fetched status for build with id: %d\n", id)
-	log.Println(details)
+	switch c.String("format") {
+	case "table":
+		t.SetOutputMirror(os.Stdout)
+		t.AppendHeader(table.Row{"key", "value"})
+		t.AppendRows([]table.Row{
+			{"ID", details.ID},
+			{"State", details.State},
+			{"Status", details.Status},
+			{"Branch", details.BranchName},
+			{"Pipeline", details.BuildTypeID},
+			{"Comment", details.Comment.Text},
+			{"WebURL", details.WebURL},
+		})
+		t.Render()
+	default:
+		jsonRender, _ := json.MarshalIndent(details, "", "  ")
+		log.Println(string(jsonRender))
+	}
+	return nil
+}
+
+func getBuilds(c *cli.Context) error {
+	client := teamcity.NewTeamcityClient(
+		15*time.Second,
+		15*time.Second,
+		15*time.Second,
+		c.String("server"),
+		fmt.Sprintf("Bearer %s", c.String("token")),
+		c.Bool("secure"),
+	)
+
+	pipeline := c.String("pipeline")
+	branch := c.String("branch")
+	user := c.String("user")
+	status := c.String("status")
+	if status != "" {
+		switch status {
+		case "SUCCESS", "success":
+			status = "SUCCESS"
+		case "FAILURE", "failure":
+			status = "FAILURE"
+		case "UNKNOWN", "unknown":
+			status = "UNKNOWN"
+		default:
+			return fmt.Errorf("Status %s not supported. Accepted values [SUCCESS FAILURE UNKNOWN]", status)
+		}
+	}
+
+	running := c.Bool("running")
+	cancelled := c.Bool("cancelled")
+	page := c.Uint("page")
+	count := c.Uint("count")
+	if page > 1 {
+		page = (page - 1) * count
+	}
+
+	params := teamcity.TCQueryParams{
+		BuildTypeID: pipeline,
+		Branch:      branch,
+		Status:      status,
+		User:        user,
+		Running:     running,
+		Cancelled:   cancelled,
+		Start:       page,
+		Count:       count,
+		LookupLimit: 0,
+	}
+
+	details, err := client.GetAllBuilds(params)
+	if err != nil {
+		log.Println(err.Error())
+		return err
+	}
+
+	switch c.String("format") {
+	case "table":
+		t.SetOutputMirror(os.Stdout)
+		t.AppendHeader(table.Row{"Id", "Pipeline", "Branch", "State", "Status"})
+		for _, detail := range details.Builds {
+			t.AppendRow([]interface{}{
+				detail.ID,
+				detail.BuildTypeID,
+				detail.BranchName,
+				detail.State,
+				detail.Status,
+			})
+		}
+		t.Render()
+	default:
+		jsonRender, _ := json.MarshalIndent(details, "", "  ")
+		log.Println(string(jsonRender))
+	}
+
 	return nil
 }
 
@@ -136,7 +238,8 @@ func fetchArtifact(c *cli.Context) error {
 		5*time.Second,
 		5*time.Second,
 		c.String("server"),
-		fmt.Sprintf("Bearer %s", c.String("token")), c.Bool("secure"),
+		fmt.Sprintf("Bearer %s", c.String("token")),
+		c.Bool("secure"),
 	)
 	id := c.Int("id")
 	content, contentType, err := client.GetArtifactTextFile(c.String("path"), c.Int("id"))
@@ -152,7 +255,7 @@ func fetchArtifact(c *cli.Context) error {
 }
 
 func main() {
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	//log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	app := &cli.App{
 		Name:    "teamcityctl",
@@ -218,8 +321,63 @@ func main() {
 						Usage:    "Provide unique build ID whose details is required",
 						Required: true,
 					},
+					&cli.StringFlag{
+						Name:        "format",
+						Usage:       "Provide format to render result. Supported formats: json, table",
+						DefaultText: "json",
+					},
 				},
 				Action: statusBuild,
+			},
+			{
+				Name:  "get-builds",
+				Usage: "get all builds as per query",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:        "pipeline",
+						Usage:       "Provide unique build ID whose details is required",
+						DefaultText: "",
+					},
+					&cli.StringFlag{
+						Name:        "user",
+						Usage:       "Provide username for listing builds triggered by this user",
+						DefaultText: "",
+					},
+					&cli.StringFlag{
+						Name:        "branch",
+						Usage:       "Provide branch name for listing builds triggered on this branch",
+						DefaultText: "",
+					},
+					&cli.StringFlag{
+						Name:        "status",
+						Usage:       "Show builds with this status. Accepted values [SUCCESS FAILURE UNKNOWN]",
+						DefaultText: "",
+					},
+					&cli.BoolFlag{
+						Name:  "running",
+						Usage: "Show builds that are running",
+					},
+					&cli.BoolFlag{
+						Name:  "cancelled",
+						Usage: "Show builds that are cancelled",
+					},
+					&cli.UintFlag{
+						Name:        "page",
+						Usage:       "Page number to show builds from. Paginates builds list",
+						DefaultText: "1",
+					},
+					&cli.UintFlag{
+						Name:        "count",
+						Usage:       "Number of builds shown per page",
+						DefaultText: "100",
+					},
+					&cli.StringFlag{
+						Name:        "format",
+						Usage:       "Provide format to render result. Supported formats: json, table",
+						DefaultText: "json",
+					},
+				},
+				Action: getBuilds,
 			},
 			{
 				Name:  "cancel-build",
@@ -274,5 +432,7 @@ func main() {
 			},
 		},
 	}
-	app.Run(os.Args)
+	if err := app.Run(os.Args); err != nil {
+		log.Fatal(err.Error())
+	}
 }

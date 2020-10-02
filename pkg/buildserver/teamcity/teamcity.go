@@ -46,7 +46,7 @@ func NewTeamcityClient(
 		// Trim the bearer from the token, to keep the API backward compatible
 		// with previous versions were the client had to add the Bearer to the
 		// token beforehand.
-		token: strings.TrimPrefix("Bearer ", token),
+		token: strings.TrimPrefix(token, "Bearer "),
 	}
 }
 
@@ -323,4 +323,68 @@ func (t *TCClient) GetArtifactTextFile(path string, id int) ([]byte, string, err
 
 func (t *TCClient) setAuthorizationHeader(headers http.Header) {
 	headers.Add("Authorization", fmt.Sprintf("Bearer %s", t.token))
+}
+
+// GetAllBuilds returns the list of builds as per the query params
+// provided by user
+func (t *TCClient) GetAllBuilds(params TCQueryParams) (builds TCBuildSnapshotDependencies, err error) {
+	requestURL := fmt.Sprintf("%s/app/rest/builds/?locator=", t.serverURL)
+
+	if params.BuildTypeID != "" {
+		requestURL = fmt.Sprintf("%s%s", requestURL, fmt.Sprintf("buildType:(id:%s),", params.BuildTypeID))
+	}
+
+	if params.Branch != "" {
+		requestURL = fmt.Sprintf("%s%s", requestURL, fmt.Sprintf("branch:(name:%s),", params.Branch))
+	}
+
+	if params.User != "" {
+		requestURL = fmt.Sprintf("%s%s", requestURL, fmt.Sprintf("user:%s,", params.User))
+	}
+
+	if params.Count > 0 {
+		requestURL = fmt.Sprintf("%s%s", requestURL, fmt.Sprintf("count:%d,", params.Count))
+	}
+
+	if params.Start > 0 {
+		requestURL = fmt.Sprintf("%s%s", requestURL, fmt.Sprintf("start:%d,", params.Start))
+	}
+
+	if params.LookupLimit > 0 {
+		requestURL = fmt.Sprintf("%s%s", requestURL, fmt.Sprintf("lookupLimit:%d,", params.LookupLimit))
+	}
+
+	if params.Running {
+		requestURL = fmt.Sprintf("%s%s", requestURL, fmt.Sprintf("running:%t,", params.Running))
+	}
+
+	if params.Cancelled {
+		requestURL = fmt.Sprintf("%s%s", requestURL, fmt.Sprintf("cancelled:%t,", params.Cancelled))
+	}
+
+	req, err := http.NewRequest("GET", requestURL, nil)
+	if err != nil {
+		return
+	}
+
+	t.setAuthorizationHeader(req.Header)
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := t.client.Do(req)
+	if err != nil {
+		return
+	}
+
+	defer resp.Body.Close()
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+
+	if err = json.Unmarshal(respBody, &builds); err != nil {
+		return
+	}
+
+	return
 }
