@@ -1,5 +1,4 @@
-image:
-  file: .gitpod.Dockerfile
+image: registry.pf9.io/gitpod/workspace-images
 
 tasks:
   - init: go get && go build ./... && go test ./...
