@@ -1,4 +1,4 @@
-FROM gitpod/workspace-full
+FROM registry.pf9.io/gitpod/workspace-full
 
 # Install custom tools, runtimes, etc.
 # For example "bastet", a command-line tetris clone:
